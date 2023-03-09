@@ -82,11 +82,6 @@
       <code>$config</code>
     </MixedAssignment>
   </file>
-  <file src="src/TaskDecoder.php">
-    <UnusedClass>
-      <code>TaskDecoder</code>
-    </UnusedClass>
-  </file>
   <file src="src/Worker.php">
     <ArgumentTypeCoercion>
       <code>$serialized</code>

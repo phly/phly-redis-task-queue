@@ -18,7 +18,10 @@ class DeferredEventListenerTest extends TestCase
 {
     public function testQueuesWrappedTask(): void
     {
-        $task = new Task('Task message');
+        $mapper   = new Mapper();
+        $mapper->attach(new TaskMapper());
+        $task     = new Task('Task message');
+        $taskJson = $mapper->extract($task);
 
         /** @var MockObject&Client $redis */
         $redis = $this->getMockBuilder(Client::class)
@@ -29,10 +32,8 @@ class DeferredEventListenerTest extends TestCase
         $redis
             ->expects($this->once())
             ->method('lpush')
-            ->with('pending', [json_encode($task, flags: JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)]);
+            ->with('pending', [json_encode($taskJson, flags: JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)]);
 
-        $mapper   = new Mapper();
-        $mapper->attach(new TaskMapper());
         $queue    = new RedisTaskQueue($redis, $mapper);
         $listener = new DeferredEventListener($queue);
         $event    = new DeferredEvent($task);

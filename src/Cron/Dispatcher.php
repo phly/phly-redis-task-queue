@@ -10,6 +10,7 @@ use Phly\RedisTaskQueue\Mapper\Mapper;
 use Phly\RedisTaskQueue\RedisTaskQueue;
 use Symfony\Component\Console\Output\OutputInterface;
 
+use function is_array;
 use function json_decode;
 use function sprintf;
 

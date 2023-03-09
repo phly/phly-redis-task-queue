@@ -145,10 +145,13 @@ class ConfigParserTest extends TestCase
 
     public function testGeneratedCrontabContainsValidJobs(): void
     {
-        $task = new Task('Task message');
+        $task   = new Task('Task message');
+        $mapper = new Mapper();
+        $mapper->attach(new TaskMapper());
+
         $job  = [
             'schedule' => '0 * * * *',
-            'task'     => json_encode($task, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+            'task'     => json_encode($mapper->extract($task), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
         ];
 
         $this->logger

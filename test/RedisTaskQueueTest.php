@@ -20,9 +20,10 @@ class RedisTaskQueueTest extends TestCase
 
     public function testQueuingPushesToRedis(): void
     {
-        $task   = new TestAsset\Task('Task message');
-        $mapper = new Mapper();
+        $task     = new TestAsset\Task('Task message');
+        $mapper   = new Mapper();
         $mapper->attach(new TaskMapper());
+        $taskJson = $mapper->extract($task);
 
         /** @var MockObject&Client $redis */
         $redis = $this->getMockBuilder(Client::class)
@@ -33,7 +34,7 @@ class RedisTaskQueueTest extends TestCase
         $redis
             ->expects($this->once())
             ->method('lpush')
-            ->with('pending', [self::jsonEncode($task)]);
+            ->with('pending', [self::jsonEncode($taskJson)]);
 
         $queue = new RedisTaskQueue($redis, $mapper);
 
