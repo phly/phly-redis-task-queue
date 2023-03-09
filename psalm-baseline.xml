@@ -68,9 +68,13 @@
       <code>$serialized</code>
     </ArgumentTypeCoercion>
     <PossiblyUnusedMethod>
-      <code>attach</code>
       <code>detach</code>
     </PossiblyUnusedMethod>
+  </file>
+  <file src="src/Mapper/MapperFactory.php">
+    <MixedAssignment>
+      <code>$mapper</code>
+    </MixedAssignment>
   </file>
   <file src="src/RedisTaskQueue.php">
     <PossiblyUnusedMethod>
