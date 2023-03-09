@@ -6,43 +6,16 @@ namespace PhlyTest\RedisTaskQueue\Mapper;
 
 use Phly\RedisTaskQueue\Mapper\Exception\ExtractionFailure;
 use Phly\RedisTaskQueue\Mapper\Mapper;
-use Phly\RedisTaskQueue\Mapper\MapperInterface;
 use PhlyTest\RedisTaskQueue\TestAsset\Task;
+use PhlyTest\RedisTaskQueue\TestAsset\TaskMapper;
 use PHPUnit\Framework\TestCase;
 
 class MapperTest extends TestCase
 {
     public function testMapperWorkflowWorksAsExpected(): void
     {
-        $mapper = new Mapper();
-        $testTaskMapper = new class() implements MapperInterface {
-            public function handlesArray(array $serialized): bool
-            {
-                return $serialized['__type'] === Task::class;
-            }
-
-            public function handlesObject(object $object): bool
-            {
-                return $object instanceof Task;
-            }
-
-            /** @param Task $object */
-            public function extract(object $object): array
-            {
-                return [
-                    '__type'  => Task::class,
-                    'message' => $object->message,
-                ];
-            }
-
-            public function hydrate(array $serialized): Task
-            {
-                $message = $serialized['message'] ?? '';
-                assert(is_string($message));
-
-                return new Task($message);
-            }
-        };
+        $mapper         = new Mapper();
+        $testTaskMapper = new TaskMapper();
 
         $mapper->attach($testTaskMapper);
 

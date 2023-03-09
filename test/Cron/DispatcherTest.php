@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace PhlyTest\RedisTaskQueue\Cron;
 
-use DateTimeImmutable;
 use Phly\RedisTaskQueue\Cron\Cronjob;
 use Phly\RedisTaskQueue\Cron\Crontab;
 use Phly\RedisTaskQueue\Cron\Dispatcher;
+use Phly\RedisTaskQueue\Mapper\Mapper;
 use Phly\RedisTaskQueue\RedisTaskQueue;
 use PhlyTest\RedisTaskQueue\TestAsset\Task;
+use PhlyTest\RedisTaskQueue\TestAsset\TaskMapper;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Predis\Client;
@@ -58,7 +59,9 @@ class DispatcherTest extends TestCase
         $crontab->append($cronjob);
         $output     = $this->getOutputMock();
         $redis      = $this->getRedisMock($taskJson);
-        $queue      = new RedisTaskQueue($redis);
+        $mapper     = new Mapper();
+        $mapper->attach(new TaskMapper());
+        $queue      = new RedisTaskQueue($redis, $mapper);
         $dispatcher = new Dispatcher($queue, $crontab);
 
         $this->assertNull($dispatcher($output));

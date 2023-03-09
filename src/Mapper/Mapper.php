@@ -11,7 +11,7 @@ use function in_array;
 
 final class Mapper
 {
-    /** @var list<MapperInterface> */
+    /** @psalm-var list<MapperInterface> */
     private array $mappers = [];
 
     public function attach(MapperInterface $mapper): void
@@ -46,14 +46,19 @@ final class Mapper
                 continue;
             }
 
-            return $mapper->extract($object);
+            $serialized = $mapper->extract($object);
+            if (! array_key_exists('__type', $serialized)) {
+                throw Exception\ExtractionFailure::forMissingTypeInSerialization($object, $serialized);
+            }
+
+            return $serialized;
         }
 
         throw Exception\ExtractionFailure::forObject($object);
     }
 
     /**
-     * @param array{__type: string, ...} $serialized
+     * @psalm-param array{__type: string, ...} $serialized
      * @throws Exception\InvalidSerializationFailure
      * @throws Exception\UnknownMapperFailure
      */

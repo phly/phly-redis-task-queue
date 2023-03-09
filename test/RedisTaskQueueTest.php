@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace PhlyTest\RedisTaskQueue;
 
+use Phly\RedisTaskQueue\Mapper\Mapper;
 use Phly\RedisTaskQueue\RedisTaskQueue;
+use PhlyTest\RedisTaskQueue\TestAsset\TaskMapper;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Predis\Client;
@@ -18,7 +20,9 @@ class RedisTaskQueueTest extends TestCase
 
     public function testQueuingPushesToRedis(): void
     {
-        $task  = new TestAsset\Task('Task message');
+        $task   = new TestAsset\Task('Task message');
+        $mapper = new Mapper();
+        $mapper->attach(new TaskMapper());
 
         /** @var MockObject&Client $redis */
         $redis = $this->getMockBuilder(Client::class)
@@ -31,7 +35,7 @@ class RedisTaskQueueTest extends TestCase
             ->method('lpush')
             ->with('pending', [self::jsonEncode($task)]);
 
-        $queue = new RedisTaskQueue($redis);
+        $queue = new RedisTaskQueue($redis, $mapper);
 
         $this->assertNull($queue->queue($task));
     }
@@ -56,7 +60,7 @@ class RedisTaskQueueTest extends TestCase
             ->with('pending', 0, -1)
             ->willReturn($tasks);
 
-        $queue = new RedisTaskQueue($redis);
+        $queue = new RedisTaskQueue($redis, new Mapper());
 
         $this->assertSame($tasks, $queue->retrievePendingTasks());
     }
@@ -77,7 +81,7 @@ class RedisTaskQueueTest extends TestCase
             ->with('pending', 0, -1)
             ->willReturn($tasks);
 
-        $queue = new RedisTaskQueue($redis);
+        $queue = new RedisTaskQueue($redis, new Mapper());
 
         $this->assertFalse($queue->hasPendingTasks());
     }
@@ -102,7 +106,7 @@ class RedisTaskQueueTest extends TestCase
             ->with('pending', 0, -1)
             ->willReturn($tasks);
 
-        $queue = new RedisTaskQueue($redis);
+        $queue = new RedisTaskQueue($redis, new Mapper());
 
         $this->assertTrue($queue->hasPendingTasks());
     }
@@ -123,7 +127,7 @@ class RedisTaskQueueTest extends TestCase
             ->with('pending', 'working')
             ->willReturn($task);
 
-        $queue = new RedisTaskQueue($redis);
+        $queue = new RedisTaskQueue($redis, new Mapper());
 
         $this->assertSame($task, $queue->retrieveNextTask());
     }
@@ -148,7 +152,7 @@ class RedisTaskQueueTest extends TestCase
             ->with('working', 0, -1)
             ->willReturn($tasks);
 
-        $queue = new RedisTaskQueue($redis);
+        $queue = new RedisTaskQueue($redis, new Mapper());
 
         $this->assertSame($tasks, $queue->retrieveInProgressTasks());
     }
@@ -169,7 +173,7 @@ class RedisTaskQueueTest extends TestCase
             ->with('working', 0, -1)
             ->willReturn($tasks);
 
-        $queue = new RedisTaskQueue($redis);
+        $queue = new RedisTaskQueue($redis, new Mapper());
 
         $this->assertFalse($queue->hasWorkingTasks());
     }
@@ -194,7 +198,7 @@ class RedisTaskQueueTest extends TestCase
             ->with('working', 0, -1)
             ->willReturn($tasks);
 
-        $queue = new RedisTaskQueue($redis);
+        $queue = new RedisTaskQueue($redis, new Mapper());
 
         $this->assertTrue($queue->hasWorkingTasks());
     }

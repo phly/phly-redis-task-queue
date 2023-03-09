@@ -6,8 +6,10 @@ namespace PhlyTest\RedisTaskQueue\EventDispatcher;
 
 use Phly\RedisTaskQueue\EventDispatcher\DeferredEvent;
 use Phly\RedisTaskQueue\EventDispatcher\DeferredEventListener;
+use Phly\RedisTaskQueue\Mapper\Mapper;
 use Phly\RedisTaskQueue\RedisTaskQueue;
 use PhlyTest\RedisTaskQueue\TestAsset\Task;
+use PhlyTest\RedisTaskQueue\TestAsset\TaskMapper;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Predis\Client;
@@ -29,7 +31,9 @@ class DeferredEventListenerTest extends TestCase
             ->method('lpush')
             ->with('pending', [json_encode($task, flags: JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)]);
 
-        $queue    = new RedisTaskQueue($redis);
+        $mapper   = new Mapper();
+        $mapper->attach(new TaskMapper());
+        $queue    = new RedisTaskQueue($redis, $mapper);
         $listener = new DeferredEventListener($queue);
         $event    = new DeferredEvent($task);
 

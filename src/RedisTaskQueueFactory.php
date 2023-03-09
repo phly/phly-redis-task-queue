@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phly\RedisTaskQueue;
 
+use Phly\RedisTaskQueue\Mapper\Mapper;
 use Predis\Client;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -28,6 +29,11 @@ final class RedisTaskQueueFactory
         $workQueue = $config['work_queue'] ?? 'working';
         assert(is_string($workQueue));
 
+        $mapper = $container->has(Mapper::class)
+            ? $container->get(Mapper::class)
+            : new Mapper();
+        assert($mapper instanceof Mapper);
+
         $logger = $container->has(LoggerInterface::class)
             ? $container->get(LoggerInterface::class)
             : null;
@@ -36,6 +42,6 @@ final class RedisTaskQueueFactory
         $client = $container->get(Client::class);
         assert($client instanceof Client);
 
-        return new RedisTaskQueue($client, $waitQueue, $workQueue, $logger);
+        return new RedisTaskQueue($client, $mapper, $waitQueue, $workQueue, $logger);
     }
 }

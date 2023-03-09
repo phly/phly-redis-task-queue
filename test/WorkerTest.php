@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace PhlyTest\RedisTaskQueue;
 
+use Phly\RedisTaskQueue\Mapper\Mapper;
+use Phly\RedisTaskQueue\Mapper\MapperInterface;
 use Phly\RedisTaskQueue\Worker;
+use PhlyTest\RedisTaskQueue\TestAsset\TaskMapper;
 use PHPUnit\Framework\TestCase;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
@@ -39,7 +42,10 @@ class WorkerTest extends TestCase
             }
         };
 
-        $worker = new Worker($dispatcher);
+        $mapper = new Mapper();
+        $mapper->attach(new TaskMapper());
+
+        $worker = new Worker($mapper, $dispatcher);
         $worker->process('{"__type":"PhlyTest\\\\RedisTaskQueue\\\\TestAsset\\\\Task","message":"Task message"}');
 
         $this->assertTrue($spy->toggle);
@@ -116,7 +122,10 @@ class WorkerTest extends TestCase
             }
         };
 
-        $worker = new Worker($dispatcher, $logger);
+        $mapper = new Mapper();
+        $mapper->attach(new TaskMapper());
+
+        $worker = new Worker($mapper, $dispatcher, $logger);
         $worker->process($taskJson);
 
         $this->assertSame(['task' => $taskJson], $logger->context);

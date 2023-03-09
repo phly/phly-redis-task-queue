@@ -1,2 +1,82 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<files psalm-version="5.7.7@e028ba46ba0d7f9a78bc3201c251e137383e145f"/>
+<files psalm-version="5.7.7@e028ba46ba0d7f9a78bc3201c251e137383e145f">
+  <file src="src/Command/TaskRunnerFactory.php">
+    <MixedAssignment>
+      <code>$config</code>
+    </MixedAssignment>
+  </file>
+  <file src="src/ConfigProvider.php">
+    <UnusedClass>
+      <code>ConfigProvider</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Cron/ConfigParser.php">
+    <MixedArgument>
+      <code><![CDATA[$jobDetails['schedule']]]></code>
+      <code><![CDATA[$jobDetails['task']]]></code>
+    </MixedArgument>
+    <MixedAssignment>
+      <code>$jobDetails</code>
+    </MixedAssignment>
+  </file>
+  <file src="src/Cron/Crontab.php">
+    <PossiblyUnusedMethod>
+      <code>count</code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="src/EventDispatcher/DeferredEvent.php">
+    <PossiblyUnusedMethod>
+      <code>__construct</code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="src/Exception/InvalidSerialization.php">
+    <PossiblyUnusedMethod>
+      <code>forMissingTaskType</code>
+      <code>forTaskType</code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="src/Mapper/EmptyObjectMapper.php">
+    <MixedMethodCall>
+      <code><![CDATA[new ($this->class)()]]></code>
+    </MixedMethodCall>
+    <UnusedClass>
+      <code>EmptyObjectMapper</code>
+    </UnusedClass>
+  </file>
+  <file src="src/Mapper/Exception/ExtractionFailure.php">
+    <PossiblyUnusedProperty>
+      <code>$serialized</code>
+    </PossiblyUnusedProperty>
+  </file>
+  <file src="src/Mapper/Exception/InvalidSerializationFailure.php">
+    <PossiblyUnusedProperty>
+      <code>$serialization</code>
+    </PossiblyUnusedProperty>
+  </file>
+  <file src="src/Mapper/Exception/UnknownMapperFailure.php">
+    <PossiblyUnusedProperty>
+      <code>$serialized</code>
+    </PossiblyUnusedProperty>
+  </file>
+  <file src="src/Mapper/Mapper.php">
+    <PossiblyUnusedMethod>
+      <code>attach</code>
+      <code>detach</code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="src/RedisTaskQueue.php">
+    <PossiblyUnusedMethod>
+      <code>hasWorkingTasks</code>
+    </PossiblyUnusedMethod>
+  </file>
+  <file src="src/RedisTaskQueueFactory.php">
+    <MixedAssignment>
+      <code>$config</code>
+    </MixedAssignment>
+  </file>
+  <file src="src/Worker.php">
+    <ArgumentTypeCoercion>
+      <code>$serialized</code>
+    </ArgumentTypeCoercion>
+  </file>
+</files>

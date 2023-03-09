@@ -8,10 +8,8 @@ use Predis\Client;
 use Predis\Response\ServerException;
 use Psr\Log\LoggerInterface;
 
-use function array_key_exists;
 use function assert;
 use function count;
-use function is_array;
 use function is_string;
 use function json_encode;
 
@@ -22,15 +20,26 @@ final class RedisTaskQueue
 {
     public function __construct(
         private Client $redis,
+        private Mapper\Mapper $mapper,
         private readonly string $waitQueue = 'pending',
         private readonly string $workQueue = 'working',
         private ?LoggerInterface $logger = null,
     ) {
     }
 
-    public function queue(TaskInterface $task): void
+    public function queue(object $task): void
     {
-        $taskJson = $this->jsonEncode($task);
+        try {
+            $serialized = $this->mapper->extract($task);
+        } catch (Mapper\Exception\ExtractionFailure $e) {
+            $this->logger?->error('Unable to serialize task of type {task}: {message}', [
+                'task'    => $task::class,
+                'message' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
+
+        $taskJson = $this->jsonEncode($serialized);
         $this->logger?->info('Queueing task: {task}', ['task' => $taskJson]);
 
         try {
@@ -103,17 +112,8 @@ final class RedisTaskQueue
         return count($tasks) > 0;
     }
 
-    private function jsonEncode(TaskInterface $task): string
+    private function jsonEncode(array $task): string
     {
-        $data = $task->jsonSerialize();
-        if (! is_array($data)) {
-            throw Exception\InvalidSerialization::forTaskType($task::class);
-        }
-
-        if (! array_key_exists('__type', $data)) {
-            throw Exception\InvalidSerialization::forMissingTaskType($task::class);
-        }
-
-        return json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        return json_encode($task, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     }
 }

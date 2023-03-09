@@ -9,7 +9,7 @@ interface MapperInterface
     /**
      * Can this implementation hydrate the given array type?
      *
-     * @param array{__type: string, ...} $serialized
+     * @psalm-param array{__type: string, ...} $serialized
      */
     public function handlesArray(array $serialized): bool;
 
@@ -21,6 +21,6 @@ interface MapperInterface
     /** @return array{__type: string, ...} */
     public function extract(object $object): array;
 
-    /** @param array{__type: string, ...} $serialized */
+    /** @psalm-param array{__type: string, ...} $serialized */
     public function hydrate(array $serialized): object;
 }
