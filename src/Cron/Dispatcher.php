@@ -6,21 +6,22 @@ namespace Phly\RedisTaskQueue\Cron;
 
 use Cron\CronExpression;
 use DateTimeImmutable;
+use Phly\RedisTaskQueue\Mapper\Mapper;
 use Phly\RedisTaskQueue\RedisTaskQueue;
-use Phly\RedisTaskQueue\TaskDecoder;
 use Symfony\Component\Console\Output\OutputInterface;
 
+use function json_decode;
 use function sprintf;
+
+use const JSON_THROW_ON_ERROR;
 
 final class Dispatcher
 {
-    private TaskDecoder $decoder;
-
     public function __construct(
         private RedisTaskQueue $queue,
         private Crontab $crontab,
+        private Mapper $mapper,
     ) {
-        $this->decoder = new TaskDecoder();
     }
 
     public function __invoke(OutputInterface $output): void
@@ -36,7 +37,19 @@ final class Dispatcher
             }
 
             $output->writeln(sprintf('<info>- Due! dispatching %s</info>', $job->task));
-            $task = $this->decoder->decode($job->task);
+
+            $serialized = json_decode($job->task, associative: true, flags: JSON_THROW_ON_ERROR);
+            if (! is_array($serialized)) {
+                $output->writeln('<error>- Unable to hydrate task; malformed</error>');
+                continue;
+            }
+
+            if (! $this->mapper->canHydrate($serialized)) {
+                $output->writeln('<error>- Unable to hydrate task; malformed, or missing mapper</error>');
+                continue;
+            }
+
+            $task = $this->mapper->hydrate($serialized);
             $this->queue->queue($task);
         }
     }

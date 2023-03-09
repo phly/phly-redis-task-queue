@@ -78,4 +78,21 @@ final class Mapper
 
         throw Exception\UnknownMapperFailure::forHydration($serialized);
     }
+
+    public function canHydrate(array $serialized): bool
+    {
+        if (! array_key_exists('__type', $serialized)) {
+            return false;
+        }
+
+        foreach ($this->mappers as $mapper) {
+            if (! $mapper->handlesArray($serialized)) {
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
 }

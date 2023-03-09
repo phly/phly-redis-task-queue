@@ -7,7 +7,9 @@ namespace PhlyTest\RedisTaskQueue\Cron;
 use Phly\RedisTaskQueue\Cron\ConfigParser;
 use Phly\RedisTaskQueue\Cron\Cronjob;
 use Phly\RedisTaskQueue\Cron\Crontab;
+use Phly\RedisTaskQueue\Mapper\Mapper;
 use PhlyTest\RedisTaskQueue\TestAsset\Task;
+use PhlyTest\RedisTaskQueue\TestAsset\TaskMapper;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -18,11 +20,14 @@ class ConfigParserTest extends TestCase
     private $logger;
 
     private ConfigParser $parser;
+    private Mapper $mapper;
 
     protected function setUp(): void
     {
         $this->logger = $this->createMock(LoggerInterface::class);
-        $this->parser = new ConfigParser();
+        $this->mapper = new Mapper();
+        $this->mapper->attach(new TaskMapper());
+        $this->parser = new ConfigParser($this->mapper);
     }
 
     /** @psalm-return iterable<string, array{0: array<mixed>}> */

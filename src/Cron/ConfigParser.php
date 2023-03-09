@@ -6,24 +6,24 @@ namespace Phly\RedisTaskQueue\Cron;
 
 use Cron\CronExpression;
 use JsonException;
-use Phly\RedisTaskQueue\Exception\ExceptionInterface;
-use Phly\RedisTaskQueue\TaskDecoder;
+use Phly\RedisTaskQueue\Mapper\Mapper;
 use Psr\Log\LoggerInterface;
 
 use function array_key_exists;
 use function is_array;
 use function is_string;
+use function json_decode;
+
+use const JSON_THROW_ON_ERROR;
 
 /**
  * @internal
  */
 class ConfigParser
 {
-    private TaskDecoder $taskDecoder;
-
-    public function __construct()
-    {
-        $this->taskDecoder = new TaskDecoder();
+    public function __construct(
+        private Mapper $mapper,
+    ) {
     }
 
     public function __invoke(array $jobs, ?LoggerInterface $logger = null): Crontab
@@ -125,9 +125,8 @@ class ConfigParser
         }
 
         try {
-            $this->taskDecoder->validate($task);
-            return true;
-        } catch (JsonException | ExceptionInterface $e) {
+            $serialized = json_decode($task, associative: true, flags: JSON_THROW_ON_ERROR);
+        } catch (JsonException $e) {
             $this->logWarning(
                 $logger,
                 // phpcs:ignore Generic.Files.LineLength.TooLong
@@ -140,6 +139,34 @@ class ConfigParser
             );
             return false;
         }
+
+        if (! is_array($serialized)) {
+            $this->logWarning(
+                $logger,
+                // phpcs:ignore Generic.Files.LineLength.TooLong
+                'Job at index {index} is invalid; "task" value ("{task}") must represent a JSON array',
+                [
+                    'index' => $index,
+                    'task'  => $task,
+                ],
+            );
+            return false;
+        }
+
+        if (! $this->mapper->canHydrate($serialized)) {
+            $this->logWarning(
+                $logger,
+                // phpcs:ignore Generic.Files.LineLength.TooLong
+                'Job at index {index} is invalid; "task" value ("{task}") must be valid task JSON: missing __type or no mapper exists',
+                [
+                    'index' => $index,
+                    'task'  => $task,
+                ],
+            );
+            return false;
+        }
+
+        return true;
     }
 
     private function logWarning(?LoggerInterface $logger, string $message, array $context): void

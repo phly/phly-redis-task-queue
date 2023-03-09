@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phly\RedisTaskQueue\Cron;
 
+use Phly\RedisTaskQueue\Mapper\Mapper;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -23,6 +24,11 @@ final class CrontabFactory
         $jobs = $config['jobs'] ?? [];
         assert(is_array($jobs));
 
-        return (new ConfigParser())($jobs, $logger);
+        $mapper = $container->has(Mapper::class)
+            ? $container->get(Mapper::class)
+            : new Mapper();
+        assert($mapper instanceof Mapper);
+
+        return (new ConfigParser($mapper))($jobs, $logger);
     }
 }

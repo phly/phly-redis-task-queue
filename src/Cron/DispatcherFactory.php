@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phly\RedisTaskQueue\Cron;
 
+use Phly\RedisTaskQueue\Mapper\Mapper;
 use Phly\RedisTaskQueue\RedisTaskQueue;
 use Psr\Container\ContainerInterface;
 
@@ -19,6 +20,11 @@ final class DispatcherFactory
         $crontab = $container->get(Crontab::class);
         assert($crontab instanceof Crontab);
 
-        return new Dispatcher($queue, $crontab);
+        $mapper = $container->has(Mapper::class)
+            ? $container->get(Mapper::class)
+            : new Mapper();
+        assert($mapper instanceof Mapper);
+
+        return new Dispatcher($queue, $crontab, $mapper);
     }
 }
