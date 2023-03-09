@@ -14,17 +14,9 @@ use Throwable;
 
 use function sprintf;
 
-use const SIGINT;
-use const SIGKILL;
-use const SIGTERM;
-
 final class TaskRunner extends Command
 {
-    private const SIGNALS = [
-        SIGTERM => "Caught TERM signal",
-        SIGKILL => "Caught KILL signal",
-        SIGINT  => "Caught INT signal",
-    ];
+    use LoopSignalsTrait;
 
     public function __construct(
         private RedisTaskQueue $queue,
@@ -43,8 +35,8 @@ final class TaskRunner extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->registerTerminationSignals($output);
-        $this->registerTaskHandler($output);
+        $this->registerTerminationSignals($this->loop, $output);
+        $this->registerTaskHandler($this->loop, $output);
         $output->writeln('<info>Starting task runnner</info>');
         $this->loop->run();
         $output->writeln('<info>Task runner stopped</info>');
@@ -52,19 +44,9 @@ final class TaskRunner extends Command
         return Command::SUCCESS;
     }
 
-    private function registerTerminationSignals(OutputInterface $output): void
+    private function registerTaskHandler(LoopInterface $loop, OutputInterface $output): void
     {
-        foreach (self::SIGNALS as $signal => $message) {
-            $this->loop->addSignal($signal, function () use ($message, $output): void {
-                $output->writeln(sprintf('<info>%s</info>', $message));
-                $this->loop->stop();
-            });
-        }
-    }
-
-    private function registerTaskHandler(OutputInterface $output): void
-    {
-        $this->loop->addPeriodicTimer($this->interval, function () use ($output): void {
+        $loop->addPeriodicTimer($this->interval, function () use ($output): void {
             try {
                 if (! $this->queue->hasPendingTasks()) {
                     return;

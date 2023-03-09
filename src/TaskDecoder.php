@@ -19,7 +19,25 @@ use const JSON_THROW_ON_ERROR;
 /** @internal */
 final class TaskDecoder
 {
+    /**
+     * @throws Exception\TaskMissingType
+     * @throws Exception\TaskUnknownType
+     */
     public function decode(string $json): TaskInterface
+    {
+        $object = $this->validate($json);
+        $class  = $object->__type;
+
+        $constructor = Closure::fromCallable([$class, 'createFromStdClass']);
+        return $constructor($object);
+    }
+
+    /**
+     * @psalm-return object{__type:class-string<TaskInterface>}
+     * @throws Exception\TaskMissingType
+     * @throws Exception\TaskUnknownType
+     */
+    public function validate(string $json): object
     {
         $object = json_decode($json, associative: false, flags: JSON_THROW_ON_ERROR);
         Assert::isInstanceOf($object, stdClass::class);
@@ -42,8 +60,6 @@ final class TaskDecoder
             throw Exception\TaskUnknownType::forNonTaskType($class);
         }
 
-        /** @psalm-var class-string<TaskInterface> $class */
-        $constructor = Closure::fromCallable([$class, 'createFromStdClass']);
-        return $constructor($object);
+        return $object;
     }
 }
