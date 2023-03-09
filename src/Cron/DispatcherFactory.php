@@ -7,6 +7,8 @@ namespace Phly\RedisTaskQueue\Cron;
 use Phly\RedisTaskQueue\RedisTaskQueue;
 use Psr\Container\ContainerInterface;
 
+use function assert;
+
 final class DispatcherFactory
 {
     public function __invoke(ContainerInterface $container): Dispatcher

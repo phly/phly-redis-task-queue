@@ -11,6 +11,9 @@ use Traversable;
 
 use function count;
 
+/**
+ * @template-implements IteratorAggregate<Cronjob>
+ */
 class Crontab implements Countable, IteratorAggregate
 {
     /** @var Cronjob[] */

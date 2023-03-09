@@ -21,6 +21,11 @@
         "psr/container": "^1.0 || ^2.0",
         "phly/phly-configfactory": "^1.2"
     },
+    "require-dev": {
+        "laminas/laminas-coding-standard": "~2.3.0",
+        "vimeo/psalm": "^5.0",
+        "phpunit/phpunit": "^9.3.14"
+    },
     "autoload": {
         "psr-4": {
             "Phly\\RedisTaskQueue\\": "src/"
@@ -35,11 +40,6 @@
         "laminas": {
             "config-provider": "Phly\\RedisTaskQueue\\ConfigProvider"
         }
-    },
-    "require-dev": {
-        "laminas/laminas-coding-standard": "~2.3.0",
-        "vimeo/psalm": "^4.29.0",
-        "phpunit/phpunit": "^9.3.14"
     },
     "config": {
         "sort-packages": true,
