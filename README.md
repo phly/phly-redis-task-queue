@@ -16,56 +16,133 @@ Additionally, the component marks itself as a [Laminas component](https://docs.l
 
 ### Creating tasks
 
-Tasks must implement `Phly\RedisTaskQueue\TaskInterface`, which itself extends `JsonSerializable`, and defines the following method:
-
-```php
-public static function createFromStdClass(object $object): self;
-```
-
-The `jsonSerialize()` method MUST return an associative array with the property `__type` resolving to the task class itself.
-
+Tasks are objects of any class.
 
 As an example:
 
 ```php
 namespace Foo;
 
-use Phly\RedisTaskQueue\TaskInterface;
-
-class HelloWorldTask implements TaskInterface
+class HelloWorldTask
 {
-    public static function createFromStdClass(object $object): self
-    {
-        $args = (array) $object;
-        unset($args['__type']);
-
-        return new self(...$args);
-    }
-
     public function __construct(
         public readonly string $message
     ) {
     }
+}
+```
 
-    public function jsonSerialize(): array
+### Serializing tasks
+
+In order to queue a task and later dispatch it, you need to be able to serialize and deserialize it.
+To do this, you will need to create a _mapper_, which is a class implementing `Phly\RedisTaskQueue\Mapper\MapperInterface`:
+
+```php
+interface MapperInterface
+{
+    /**
+     * Can this implementation hydrate the given array type?
+     *
+     * @psalm-param array{__type: string, ...} $serialized
+     */
+    public function handlesArray(array $serialized): bool;
+
+    /**
+     * Can this implementation extract the given object type?
+     */
+    public function handlesObject(object $object): bool;
+
+    /** @return array{__type: string, ...} */
+    public function extract(object $object): array;
+
+    /** @psalm-param array{__type: string, ...} $serialized */
+    public function hydrate(array $serialized): object;
+}
+```
+
+When serializing to an array, the returned array MUST contain the member `__type`, with a string value resolving to the task class type.
+Otherwise, the remainder of the serialization format is up to you.
+You can assume that when `hydrate` is called, the array contains a `__type` member your mapper can handle.
+
+These mapper classes can be registered with your DI container.
+Once you have, you can register them with your configuration so that they will be automatically added to the internal mapper:
+
+```php
+return [
+    'redis-task-queue' => [
+        'mappers' => [
+            \App\Mapper\TaskMapper::class,
+        ],
+    ],
+];
+```
+
+#### EmptyObjectMapper
+
+This component provides a versatile mapper implementation for empty task implementations, `Phly\RedisTaskQueue\Mapper\EmptyObjectMapper`.
+This class takes a single argument, the name of a task class to respond to.
+When extracting, it will extract an array with exactly one member, `__type`, with the class value.
+When hydrating, it will instantiate the given class with no arguments and return it.
+
+Because this implementation has an argument, you have two possibilities for registering it with the mapper.
+
+First, you could create a custom factory.
+As an example, if the empty class were named `RssFeed`, you could create an `RssFeedMapperFactory`:
+
+```php
+class RssFeedMapperFactory
+{
+    public function __invoke(): EmptyObjectMapper
     {
-        return [
-            '__type'  => __CLASS__,
-            'message' => $this->message,
-        ];
+        return new EmptyObjectMapper(RssFeed::class);
     }
 }
 ```
 
-> #### Why is TaskInterface necessary?
-> 
-> The `TaskInterface` is necessary because (a) PHP serialization can be dangerous, and (b) once a task is dequeued, we need to be able to cast it to a known type before passing it to the event dispatcher.
-> JSON serialization solves the security issues of (a), while the `createFromStdClass()` method solves for (b).
-> 
-> While this library _could_ try and handle this via other mechanisms (e.g., `get_object_vars()` to serialize, store the class name, and deserialize using the reflection API), those mechanisms are ultimately more brittle and give less control over what data is absolutely necessary to convey the task definition.
-> 
-> Another approach would be to use a mapper strategy, mapping a struct that includes the class name and the serialized data to a factory that can produce an instance.
-> This approach may be tried in the future as an effort to decouple tasks from this library.
+and then map a service to it:
+
+```php
+return [
+    'dependencies' => [
+        'factories' => 
+            'rss-feed-mapper' => RssFeedMapperFactory::class,
+        ],
+    ],
+    'redis-task-queue' => [
+        'mappers' => [
+            'rss-feed-mapper',
+        ],
+    ],
+];
+```
+
+Second, you could use a delegator factory on the `Phly\RedisTaskQueue\Mapper\Mapper` class to attach it:
+
+```php
+class RssFeedMapperDelegator
+{
+    public function __invoke(ContainerInterface $container, string $requestedName, callable $factory): Mapper
+    {
+        $mapper = $factory();
+        $mapper->attach(new EmptyObjectMapper(RssFeed::class));
+        return $mapper;
+    }
+}
+```
+
+You would then just register the delegator factory:
+
+```php
+return [
+    'dependencies' => [
+        'delegators' => [
+            \Phly\RedisTaskQueue\Mapper\Mapper::class => [
+                RssFeedMapperDelegator::class,
+            ],
+        ],
+    ],
+];
+```
 
 ### Enqueuing tasks
 
@@ -141,7 +218,7 @@ Each element is an array with two keys:
 
 - **schedule**: the crontab schedule to use; see the [dragonmantank/cron-expression write-up](https://github.com/dragonmantank/cron-expression#cron-expressions) for a good overview.
 - **task**: a JSON string representing a task to run.
-  This string MUST represent a JSON object, and minimally contain a `__type` key that resolves to a class implementing `TaskInterface`.
+  This string MUST represent a JSON object that can be mapped to a PHP class using the mapper.
   Due to how JSON parsing works, you will need to ensure you escape namespace separators properly; this is usually a sequence of four backslashes: `App\\\\Tasks\\\\FetchRssFeed`.
 
 As an example:
