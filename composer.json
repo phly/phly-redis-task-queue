@@ -27,6 +27,9 @@
         "phpunit/phpunit": "^9.3.14"
     },
     "autoload": {
+        "files": [
+            "./src/functions.php"
+        ],
         "psr-4": {
             "Phly\\RedisTaskQueue\\": "src/"
         }

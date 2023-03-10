@@ -8,12 +8,8 @@ use JsonException;
 use Phly\RedisTaskQueue\Mapper\Mapper;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 
-use function is_array;
-use function json_decode;
-
-use const JSON_THROW_ON_ERROR;
+use function Phly\RedisTaskQueue\jsonDecode;
 
 final class Worker
 {
@@ -37,7 +33,7 @@ final class Worker
     private function jsonDecode(string $taskJson): array
     {
         try {
-            $serialized = json_decode($taskJson, associative: true, flags: JSON_THROW_ON_ERROR);
+            return jsonDecode($taskJson);
         } catch (JsonException $e) {
             $this->logger?->error(
                 'Unable to deserialize task from JSON: {message}',
@@ -45,12 +41,5 @@ final class Worker
             );
             throw $e;
         }
-
-        if (! is_array($serialized)) {
-            $this->logger?->error('Deserializing task from JSON does not result in array');
-            throw new RuntimeException('Invalid task serialization');
-        }
-
-        return $serialized;
     }
 }

@@ -12,9 +12,7 @@ use Psr\Log\LoggerInterface;
 use function array_key_exists;
 use function is_array;
 use function is_string;
-use function json_decode;
-
-use const JSON_THROW_ON_ERROR;
+use function Phly\RedisTaskQueue\jsonDecode;
 
 /**
  * @internal
@@ -125,7 +123,7 @@ class ConfigParser
         }
 
         try {
-            $serialized = json_decode($task, associative: true, flags: JSON_THROW_ON_ERROR);
+            $serialized = jsonDecode($task);
         } catch (JsonException $e) {
             $this->logWarning(
                 $logger,
@@ -135,19 +133,6 @@ class ConfigParser
                     'index'   => $index,
                     'task'    => $task,
                     'message' => $e->getMessage(),
-                ],
-            );
-            return false;
-        }
-
-        if (! is_array($serialized)) {
-            $this->logWarning(
-                $logger,
-                // phpcs:ignore Generic.Files.LineLength.TooLong
-                'Job at index {index} is invalid; "task" value ("{task}") must represent a JSON array',
-                [
-                    'index' => $index,
-                    'task'  => $task,
                 ],
             );
             return false;

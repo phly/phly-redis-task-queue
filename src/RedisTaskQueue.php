@@ -11,10 +11,7 @@ use Psr\Log\LoggerInterface;
 use function assert;
 use function count;
 use function is_string;
-use function json_encode;
-
-use const JSON_UNESCAPED_SLASHES;
-use const JSON_UNESCAPED_UNICODE;
+use function Phly\RedisTaskQueue\jsonEncode;
 
 final class RedisTaskQueue
 {
@@ -39,7 +36,7 @@ final class RedisTaskQueue
             throw $e;
         }
 
-        $taskJson = $this->jsonEncode($serialized);
+        $taskJson = jsonEncode($serialized);
         $this->logger?->info('Queueing task: {task}', ['task' => $taskJson]);
 
         try {
@@ -110,10 +107,5 @@ final class RedisTaskQueue
     {
         $tasks = $this->retrieveInProgressTasks();
         return count($tasks) > 0;
-    }
-
-    private function jsonEncode(array $task): string
-    {
-        return json_encode($task, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     }
 }

@@ -16,6 +16,8 @@ use PHPUnit\Framework\TestCase;
 use Predis\Client;
 use Symfony\Component\Console\Output\OutputInterface;
 
+use function Phly\RedisTaskQueue\jsonEncode;
+
 class DispatcherTest extends TestCase
 {
     /** @return MockObject&OutputInterface */
@@ -55,7 +57,7 @@ class DispatcherTest extends TestCase
         $mapper     = new Mapper();
         $mapper->attach(new TaskMapper());
         $task       = new Task('Task message');
-        $taskJson   = json_encode($mapper->extract($task), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $taskJson   = jsonEncode($mapper->extract($task));
         $cronjob    = new Cronjob('* * * * *', $taskJson);
         $crontab    = new Crontab();
         $crontab->append($cronjob);

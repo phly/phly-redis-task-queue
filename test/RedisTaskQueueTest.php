@@ -11,13 +11,10 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Predis\Client;
 
+use function Phly\RedisTaskQueue\jsonEncode;
+
 class RedisTaskQueueTest extends TestCase
 {
-    protected static function jsonEncode(mixed $value): string
-    {
-        return json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-    }
-
     public function testQueuingPushesToRedis(): void
     {
         $task     = new TestAsset\Task('Task message');
@@ -34,7 +31,7 @@ class RedisTaskQueueTest extends TestCase
         $redis
             ->expects($this->once())
             ->method('lpush')
-            ->with('pending', [self::jsonEncode($taskJson)]);
+            ->with('pending', [jsonEncode($taskJson)]);
 
         $queue = new RedisTaskQueue($redis, $mapper);
 
