@@ -14,8 +14,6 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
-use function Phly\RedisTaskQueue\jsonEncode;
-
 class ConfigParserTest extends TestCase
 {
     /** @var MockObject&LoggerInterface */
@@ -153,7 +151,7 @@ class ConfigParserTest extends TestCase
 
         $job = [
             'schedule' => '0 * * * *',
-            'task'     => jsonEncode($mapper->extract($task)),
+            'task'     => $mapper->toString($task),
         ];
 
         $this->logger

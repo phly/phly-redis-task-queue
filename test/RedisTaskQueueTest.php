@@ -6,21 +6,22 @@ namespace PhlyTest\RedisTaskQueue;
 
 use Phly\RedisTaskQueue\Mapper\Mapper;
 use Phly\RedisTaskQueue\RedisTaskQueue;
+use PhlyTest\RedisTaskQueue\TestAsset\Task;
 use PhlyTest\RedisTaskQueue\TestAsset\TaskMapper;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Predis\Client;
 
-use function Phly\RedisTaskQueue\jsonEncode;
+use function array_map;
 
 class RedisTaskQueueTest extends TestCase
 {
-    public function testQueuingPushesToRedis(): void
+    public function testQueueingPushesToRedis(): void
     {
-        $task   = new TestAsset\Task('Task message');
+        $task   = new Task('Task message');
         $mapper = new Mapper();
         $mapper->attach(new TaskMapper());
-        $taskJson = $mapper->extract($task);
+        $taskJson = $mapper->toString($task);
 
         /** @var MockObject&Client $redis */
         $redis = $this->getMockBuilder(Client::class)
@@ -31,7 +32,7 @@ class RedisTaskQueueTest extends TestCase
         $redis
             ->expects($this->once())
             ->method('lpush')
-            ->with('pending', [jsonEncode($taskJson)]);
+            ->with('pending', [$taskJson]);
 
         $queue = new RedisTaskQueue($redis, $mapper);
 
@@ -40,11 +41,17 @@ class RedisTaskQueueTest extends TestCase
 
     public function testRetrievePendingTasksPullsListFromWaitQueue(): void
     {
-        $tasks = [
-            'one',
-            'two',
-            'three',
+        $mapper = new Mapper();
+        $mapper->attach(new TaskMapper());
+
+        $tasks     = [
+            new Task('one'),
+            new Task('two'),
+            new Task('three'),
         ];
+        $tasksJson = array_map(function (Task $task) use ($mapper): string {
+            return $mapper->toString($task);
+        }, $tasks);
 
         /** @var MockObject&Client $redis */
         $redis = $this->getMockBuilder(Client::class)
@@ -56,17 +63,15 @@ class RedisTaskQueueTest extends TestCase
             ->expects($this->once())
             ->method('lrange')
             ->with('pending', 0, -1)
-            ->willReturn($tasks);
+            ->willReturn($tasksJson);
 
-        $queue = new RedisTaskQueue($redis, new Mapper());
+        $queue = new RedisTaskQueue($redis, $mapper);
 
-        $this->assertSame($tasks, $queue->retrievePendingTasks());
+        $this->assertEquals($tasks, $queue->retrievePendingTasks());
     }
 
     public function testHasPendingTasksReturnsFalseWhenNoTasksInWaitQueue(): void
     {
-        $tasks = [];
-
         /** @var MockObject&Client $redis */
         $redis = $this->getMockBuilder(Client::class)
             ->disableOriginalConstructor()
@@ -77,7 +82,7 @@ class RedisTaskQueueTest extends TestCase
             ->expects($this->once())
             ->method('lrange')
             ->with('pending', 0, -1)
-            ->willReturn($tasks);
+            ->willReturn([]);
 
         $queue = new RedisTaskQueue($redis, new Mapper());
 
@@ -86,11 +91,17 @@ class RedisTaskQueueTest extends TestCase
 
     public function testHasPendingTasksReturnsTrueWhenOneOrMoreTasksInWaitQueue(): void
     {
-        $tasks = [
-            'one',
-            'two',
-            'three',
+        $mapper = new Mapper();
+        $mapper->attach(new TaskMapper());
+
+        $tasks     = [
+            new Task('one'),
+            new Task('two'),
+            new Task('three'),
         ];
+        $tasksJson = array_map(function (Task $task) use ($mapper): string {
+            return $mapper->toString($task);
+        }, $tasks);
 
         /** @var MockObject&Client $redis */
         $redis = $this->getMockBuilder(Client::class)
@@ -102,16 +113,27 @@ class RedisTaskQueueTest extends TestCase
             ->expects($this->once())
             ->method('lrange')
             ->with('pending', 0, -1)
-            ->willReturn($tasks);
+            ->willReturn($tasksJson);
 
-        $queue = new RedisTaskQueue($redis, new Mapper());
+        $queue = new RedisTaskQueue($redis, $mapper);
 
         $this->assertTrue($queue->hasPendingTasks());
     }
 
     public function testRetrieveNextTaskPopsTaskFromWaitQueueAndPushesToWorkQueue(): void
     {
-        $task = 'task';
+        $mapper = new Mapper();
+        $mapper->attach(new TaskMapper());
+
+        $task      = new Task('one');
+        $tasks     = [
+            new Task('two'),
+            new Task('three'),
+            $task,
+        ];
+        $tasksJson = array_map(function (Task $task) use ($mapper): string {
+            return $mapper->toString($task);
+        }, $tasks);
 
         /** @var MockObject&Client $redis */
         $redis = $this->getMockBuilder(Client::class)
@@ -123,20 +145,26 @@ class RedisTaskQueueTest extends TestCase
             ->expects($this->once())
             ->method('rpoplpush')
             ->with('pending', 'working')
-            ->willReturn($task);
+            ->willReturn($mapper->toString($task));
 
-        $queue = new RedisTaskQueue($redis, new Mapper());
+        $queue = new RedisTaskQueue($redis, $mapper);
 
-        $this->assertSame($task, $queue->retrieveNextTask());
+        $this->assertEquals($task, $queue->retrieveNextTask());
     }
 
     public function testRetrieveInProgressTasksPullsListFromWorkQueue(): void
     {
-        $tasks = [
-            'one',
-            'two',
-            'three',
+        $mapper = new Mapper();
+        $mapper->attach(new TaskMapper());
+
+        $tasks     = [
+            new Task('one'),
+            new Task('two'),
+            new Task('three'),
         ];
+        $tasksJson = array_map(function (Task $task) use ($mapper): string {
+            return $mapper->toString($task);
+        }, $tasks);
 
         /** @var MockObject&Client $redis */
         $redis = $this->getMockBuilder(Client::class)
@@ -148,11 +176,11 @@ class RedisTaskQueueTest extends TestCase
             ->expects($this->once())
             ->method('lrange')
             ->with('working', 0, -1)
-            ->willReturn($tasks);
+            ->willReturn($tasksJson);
 
-        $queue = new RedisTaskQueue($redis, new Mapper());
+        $queue = new RedisTaskQueue($redis, $mapper);
 
-        $this->assertSame($tasks, $queue->retrieveInProgressTasks());
+        $this->assertEquals($tasks, $queue->retrieveInProgressTasks());
     }
 
     public function testHasWorkingTasksReturnsFalseWhenNoTasksInWorkQueue(): void
@@ -178,11 +206,17 @@ class RedisTaskQueueTest extends TestCase
 
     public function testHasWorkingTasksReturnsTrueWhenOneOrMoreTasksInWorkQueue(): void
     {
-        $tasks = [
-            'one',
-            'two',
-            'three',
+        $mapper = new Mapper();
+        $mapper->attach(new TaskMapper());
+
+        $tasks     = [
+            new Task('one'),
+            new Task('two'),
+            new Task('three'),
         ];
+        $tasksJson = array_map(function (Task $task) use ($mapper): string {
+            return $mapper->toString($task);
+        }, $tasks);
 
         /** @var MockObject&Client $redis */
         $redis = $this->getMockBuilder(Client::class)
@@ -194,9 +228,9 @@ class RedisTaskQueueTest extends TestCase
             ->expects($this->once())
             ->method('lrange')
             ->with('working', 0, -1)
-            ->willReturn($tasks);
+            ->willReturn($tasksJson);
 
-        $queue = new RedisTaskQueue($redis, new Mapper());
+        $queue = new RedisTaskQueue($redis, $mapper);
 
         $this->assertTrue($queue->hasWorkingTasks());
     }

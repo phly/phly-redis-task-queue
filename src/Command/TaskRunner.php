@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Phly\RedisTaskQueue\Command;
 
 use Phly\RedisTaskQueue\RedisTaskQueue;
-use Phly\RedisTaskQueue\Worker;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use React\EventLoop\LoopInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -20,7 +20,7 @@ final class TaskRunner extends Command
 
     public function __construct(
         private RedisTaskQueue $queue,
-        private Worker $worker,
+        private EventDispatcherInterface $dispatcher,
         private LoopInterface $loop,
         private readonly float $interval = 1.0,
     ) {
@@ -48,11 +48,12 @@ final class TaskRunner extends Command
     {
         $loop->addPeriodicTimer($this->interval, function () use ($output): void {
             try {
-                if (! $this->queue->hasPendingTasks()) {
+                $task = $this->queue->retrieveNextTask();
+                if (null === $task) {
                     return;
                 }
 
-                $this->worker->process($this->queue->retrieveNextTask());
+                $this->dispatcher->dispatch($task);
             } catch (Throwable $e) {
                 $output->writeln(sprintf('<error>Error processing queue: %s</error>', $e->getMessage()));
             }

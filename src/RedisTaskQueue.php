@@ -8,10 +8,11 @@ use Predis\Client;
 use Predis\Response\ServerException;
 use Psr\Log\LoggerInterface;
 
+use function array_filter;
+use function array_map;
 use function assert;
 use function count;
 use function is_string;
-use function Phly\RedisTaskQueue\jsonEncode;
 
 final class RedisTaskQueue
 {
@@ -27,7 +28,7 @@ final class RedisTaskQueue
     public function queue(object $task): void
     {
         try {
-            $serialized = $this->mapper->extract($task);
+            $taskJson = $this->mapper->toString($task);
         } catch (Mapper\Exception\ExtractionFailure $e) {
             $this->logger?->error('Unable to serialize task of type {task}: {message}', [
                 'task'    => $task::class,
@@ -36,7 +37,6 @@ final class RedisTaskQueue
             throw $e;
         }
 
-        $taskJson = jsonEncode($serialized);
         $this->logger?->info('Queueing task: {task}', ['task' => $taskJson]);
 
         try {
@@ -56,7 +56,7 @@ final class RedisTaskQueue
         return count($tasks) > 0;
     }
 
-    public function retrieveNextTask(): string
+    public function retrieveNextTask(): ?object
     {
         try {
             $task = $this->redis->rpoplpush($this->waitQueue, $this->workQueue);
@@ -68,11 +68,16 @@ final class RedisTaskQueue
             throw $e;
         }
 
+        if (null === $task) {
+            return null;
+        }
+
         assert(is_string($task));
 
-        return $task;
+        return $this->mapper->toObject($task);
     }
 
+    /** @psalm-return list<object> */
     public function retrievePendingTasks(): array
     {
         try {
@@ -85,7 +90,7 @@ final class RedisTaskQueue
             throw $e;
         }
 
-        return $tasks;
+        return $this->filterAndCastTaskList($tasks);
     }
 
     public function retrieveInProgressTasks(): array
@@ -100,12 +105,27 @@ final class RedisTaskQueue
             throw $e;
         }
 
-        return $tasks;
+        return $this->filterAndCastTaskList($tasks);
     }
 
     public function hasWorkingTasks(): bool
     {
         $tasks = $this->retrieveInProgressTasks();
         return count($tasks) > 0;
+    }
+
+    /**
+     * @psalm-param list<string> $tasks
+     * @psalm-return list<object>
+     */
+    private function filterAndCastTaskList(array $tasks): array
+    {
+        $tasks = array_filter($tasks, function (string $task): bool {
+            return $this->mapper->canCastToObject($task);
+        });
+
+        return array_map(function (string $task): object {
+            return $this->mapper->toObject($task);
+        }, $tasks);
     }
 }

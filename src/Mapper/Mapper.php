@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Phly\RedisTaskQueue\Mapper;
 
+use JsonException;
+
 use function array_key_exists;
 use function array_search;
 use function array_values;
 use function in_array;
+use function Phly\RedisTaskQueue\jsonDecode;
+use function Phly\RedisTaskQueue\jsonEncode;
 
 final class Mapper
 {
@@ -38,8 +42,9 @@ final class Mapper
     /**
      * @return array{__type: string, ...}
      * @throws Exception\ExtractionFailure
+     * @throws JsonException
      */
-    public function extract(object $object): array
+    public function toString(object $object): string
     {
         foreach ($this->mappers as $mapper) {
             if (! $mapper->handlesObject($object)) {
@@ -51,7 +56,7 @@ final class Mapper
                 throw Exception\ExtractionFailure::forMissingTypeInSerialization($object, $serialized);
             }
 
-            return $serialized;
+            return jsonEncode($serialized);
         }
 
         throw Exception\ExtractionFailure::forObject($object);
@@ -61,9 +66,12 @@ final class Mapper
      * @psalm-param array{__type: string, ...} $serialized
      * @throws Exception\InvalidSerializationFailure
      * @throws Exception\UnknownMapperFailure
+     * @throws JsonException
      */
-    public function hydrate(array $serialized): object
+    public function toObject(string $json): object
     {
+        $serialized = jsonDecode($json);
+
         if (! array_key_exists('__type', $serialized)) {
             throw Exception\InvalidSerializationFailure::forMissingType($serialized);
         }
@@ -76,11 +84,17 @@ final class Mapper
             return $mapper->hydrate($serialized);
         }
 
-        throw Exception\UnknownMapperFailure::forHydration($serialized);
+        throw Exception\UnknownMapperFailure::forHydration($json);
     }
 
-    public function canHydrate(array $serialized): bool
+    public function canCastToObject(string $json): bool
     {
+        try {
+            $serialized = jsonDecode($json);
+        } catch (JsonException) {
+            return false;
+        }
+
         if (! array_key_exists('__type', $serialized)) {
             return false;
         }

@@ -10,7 +10,6 @@ use Phly\RedisTaskQueue\Mapper\Mapper;
 use Phly\RedisTaskQueue\RedisTaskQueue;
 use Symfony\Component\Console\Output\OutputInterface;
 
-use function Phly\RedisTaskQueue\jsonDecode;
 use function sprintf;
 
 final class Dispatcher
@@ -36,13 +35,12 @@ final class Dispatcher
 
             $output->writeln(sprintf('<info>- Due! dispatching %s</info>', $job->task));
 
-            $serialized = jsonDecode($job->task);
-            if (! $this->mapper->canHydrate($serialized)) {
+            if (! $this->mapper->canCastToObject($job->task)) {
                 $output->writeln('<error>- Unable to hydrate task; malformed, or missing mapper</error>');
                 continue;
             }
 
-            $task = $this->mapper->hydrate($serialized);
+            $task = $this->mapper->toObject($job->task);
             $this->queue->queue($task);
         }
     }

@@ -33,7 +33,6 @@ final class ConfigProvider
                 LoopInterface::class                         => LoopFactory::class,
                 Mapper\Mapper::class                         => Mapper\MapperFactory::class,
                 RedisTaskQueue::class                        => RedisTaskQueueFactory::class,
-                Worker::class                                => WorkerFactory::class,
             ],
         ];
     }

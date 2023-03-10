@@ -14,8 +14,6 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Predis\Client;
 
-use function Phly\RedisTaskQueue\jsonEncode;
-
 class DeferredEventListenerTest extends TestCase
 {
     public function testQueuesWrappedTask(): void
@@ -23,7 +21,7 @@ class DeferredEventListenerTest extends TestCase
         $mapper = new Mapper();
         $mapper->attach(new TaskMapper());
         $task     = new Task('Task message');
-        $taskJson = $mapper->extract($task);
+        $taskJson = $mapper->toString($task);
 
         /** @var MockObject&Client $redis */
         $redis = $this->getMockBuilder(Client::class)
@@ -34,7 +32,7 @@ class DeferredEventListenerTest extends TestCase
         $redis
             ->expects($this->once())
             ->method('lpush')
-            ->with('pending', [jsonEncode($taskJson)]);
+            ->with('pending', [$taskJson]);
 
         $queue    = new RedisTaskQueue($redis, $mapper);
         $listener = new DeferredEventListener($queue);

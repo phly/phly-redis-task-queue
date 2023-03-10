@@ -5,14 +5,12 @@ declare(strict_types=1);
 namespace Phly\RedisTaskQueue\Cron;
 
 use Cron\CronExpression;
-use JsonException;
 use Phly\RedisTaskQueue\Mapper\Mapper;
 use Psr\Log\LoggerInterface;
 
 use function array_key_exists;
 use function is_array;
 use function is_string;
-use function Phly\RedisTaskQueue\jsonDecode;
 
 /**
  * @internal
@@ -122,23 +120,7 @@ class ConfigParser
             return false;
         }
 
-        try {
-            $serialized = jsonDecode($task);
-        } catch (JsonException $e) {
-            $this->logWarning(
-                $logger,
-                // phpcs:ignore Generic.Files.LineLength.TooLong
-                'Job at index {index} is invalid; "task" value ("{task}") must be valid task JSON: {message}',
-                [
-                    'index'   => $index,
-                    'task'    => $task,
-                    'message' => $e->getMessage(),
-                ],
-            );
-            return false;
-        }
-
-        if (! $this->mapper->canHydrate($serialized)) {
+        if (! $this->mapper->canCastToObject($task)) {
             $this->logWarning(
                 $logger,
                 // phpcs:ignore Generic.Files.LineLength.TooLong

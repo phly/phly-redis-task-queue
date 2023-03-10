@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Phly\RedisTaskQueue\Command;
 
 use Phly\RedisTaskQueue\RedisTaskQueue;
-use Phly\RedisTaskQueue\Worker;
 use Psr\Container\ContainerInterface;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use React\EventLoop\LoopInterface;
 
 use function assert;
@@ -20,8 +20,8 @@ final class TaskRunnerFactory
         $queue = $container->get(RedisTaskQueue::class);
         assert($queue instanceof RedisTaskQueue);
 
-        $worker = $container->get(Worker::class);
-        assert($worker instanceof Worker);
+        $dispatcher = $container->get(EventDispatcherInterface::class);
+        assert($dispatcher instanceof EventDispatcherInterface);
 
         $loop = $container->get(LoopInterface::class);
         assert($loop instanceof LoopInterface);
@@ -37,7 +37,7 @@ final class TaskRunnerFactory
 
         return new TaskRunner(
             $queue,
-            $worker,
+            $dispatcher,
             $loop,
             (float) $interval,
         );
