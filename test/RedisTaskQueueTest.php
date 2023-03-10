@@ -17,8 +17,8 @@ class RedisTaskQueueTest extends TestCase
 {
     public function testQueuingPushesToRedis(): void
     {
-        $task     = new TestAsset\Task('Task message');
-        $mapper   = new Mapper();
+        $task   = new TestAsset\Task('Task message');
+        $mapper = new Mapper();
         $mapper->attach(new TaskMapper());
         $taskJson = $mapper->extract($task);
 

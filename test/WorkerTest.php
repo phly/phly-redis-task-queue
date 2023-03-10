@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace PhlyTest\RedisTaskQueue;
 
 use Phly\RedisTaskQueue\Mapper\Mapper;
-use Phly\RedisTaskQueue\Mapper\MapperInterface;
 use Phly\RedisTaskQueue\Worker;
 use PhlyTest\RedisTaskQueue\TestAsset\TaskMapper;
 use PHPUnit\Framework\TestCase;
@@ -27,7 +26,7 @@ class WorkerTest extends TestCase
             $spy->toggle = true;
         };
 
-        $dispatcher = new class($listener) implements EventDispatcherInterface {
+        $dispatcher = new class ($listener) implements EventDispatcherInterface {
             /** @var callable */
             private $listener;
 
@@ -58,7 +57,7 @@ class WorkerTest extends TestCase
         $listener = function (): void {
         };
 
-        $dispatcher = new class($listener) implements EventDispatcherInterface {
+        $dispatcher = new class ($listener) implements EventDispatcherInterface {
             /** @var callable */
             private $listener;
 
@@ -116,6 +115,7 @@ class WorkerTest extends TestCase
                 throw new RuntimeException('Should not be raised');
             }
 
+            /** @param mixed $level */
             public function log($level, string|Stringable $message, array $context = []): void
             {
                 throw new RuntimeException('Should not be raised');

@@ -20,7 +20,7 @@ class DeferredEventListenerTest extends TestCase
 {
     public function testQueuesWrappedTask(): void
     {
-        $mapper   = new Mapper();
+        $mapper = new Mapper();
         $mapper->attach(new TaskMapper());
         $task     = new Task('Task message');
         $taskJson = $mapper->extract($task);

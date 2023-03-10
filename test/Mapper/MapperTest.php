@@ -19,7 +19,7 @@ class MapperTest extends TestCase
 
         $mapper->attach($testTaskMapper);
 
-        $task = new Task('Task message');
+        $task       = new Task('Task message');
         $serialized = $mapper->extract($task);
 
         $this->assertArrayHasKey('__type', $serialized);

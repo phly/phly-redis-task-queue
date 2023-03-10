@@ -6,6 +6,9 @@ namespace PhlyTest\RedisTaskQueue\TestAsset;
 
 use Phly\RedisTaskQueue\Mapper\MapperInterface;
 
+use function assert;
+use function is_string;
+
 class TaskMapper implements MapperInterface
 {
     public function handlesArray(array $serialized): bool

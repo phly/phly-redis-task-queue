@@ -22,7 +22,7 @@ class EmptyObjectMapperTest extends TestCase
     /** @depends testMapperHandlesObjectOfKnownType */
     public function testMapperCanExtractObject(EmptyObject $object): void
     {
-        $mapper = new EmptyObjectMapper(EmptyObject::class);
+        $mapper     = new EmptyObjectMapper(EmptyObject::class);
         $serialized = $mapper->extract($object);
         $this->assertEquals(['__type' => EmptyObject::class], $serialized);
     }

@@ -54,12 +54,12 @@ class DispatcherTest extends TestCase
 
     public function testDispatcherQueuesJobsWhenDue(): void
     {
-        $mapper     = new Mapper();
+        $mapper = new Mapper();
         $mapper->attach(new TaskMapper());
-        $task       = new Task('Task message');
-        $taskJson   = jsonEncode($mapper->extract($task));
-        $cronjob    = new Cronjob('* * * * *', $taskJson);
-        $crontab    = new Crontab();
+        $task     = new Task('Task message');
+        $taskJson = jsonEncode($mapper->extract($task));
+        $cronjob  = new Cronjob('* * * * *', $taskJson);
+        $crontab  = new Crontab();
         $crontab->append($cronjob);
         $output     = $this->getOutputMock();
         $redis      = $this->getRedisMock($taskJson);

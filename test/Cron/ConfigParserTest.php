@@ -151,7 +151,7 @@ class ConfigParserTest extends TestCase
         $mapper = new Mapper();
         $mapper->attach(new TaskMapper());
 
-        $job  = [
+        $job = [
             'schedule' => '0 * * * *',
             'task'     => jsonEncode($mapper->extract($task)),
         ];
