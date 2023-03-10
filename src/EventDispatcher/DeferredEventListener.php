@@ -7,8 +7,6 @@ namespace Phly\RedisTaskQueue\EventDispatcher;
 use Phly\RedisTaskQueue\RedisTaskQueue;
 use Psr\Log\LoggerInterface;
 
-use function Phly\RedisTaskQueue\jsonEncode;
-
 final class DeferredEventListener
 {
     public function __construct(
@@ -19,8 +17,8 @@ final class DeferredEventListener
 
     public function __invoke(DeferredEvent $event): void
     {
-        $this->logger?->info('Queuing task: {task}', [
-            'task' => jsonEncode($event->wrappedEvent),
+        $this->logger?->info('Queuing task of type {task}', [
+            'task' => $event::class,
         ]);
         $this->queue->queue($event->wrappedEvent);
     }
