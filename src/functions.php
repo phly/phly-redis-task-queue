@@ -26,7 +26,8 @@ function jsonDecode(string $value): array
     return $deserialized;
 }
 
+/** @throws JsonException */
 function jsonEncode(mixed $value): string
 {
-    return json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    return json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
 }
