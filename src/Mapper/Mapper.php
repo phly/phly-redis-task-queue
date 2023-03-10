@@ -5,11 +5,16 @@ declare(strict_types=1);
 namespace Phly\RedisTaskQueue\Mapper;
 
 use JsonException;
+use Phly\RedisTaskQueue\Exception\TaskMissingType;
+use Phly\RedisTaskQueue\Mapper\Exception\ExtractionFailure;
+use Phly\RedisTaskQueue\Mapper\Exception\InvalidSerializationFailure;
+use Phly\RedisTaskQueue\Mapper\Exception\UnknownMapperFailure;
 
 use function array_key_exists;
 use function array_search;
 use function array_values;
 use function in_array;
+use function is_string;
 use function Phly\RedisTaskQueue\jsonDecode;
 use function Phly\RedisTaskQueue\jsonEncode;
 
@@ -40,8 +45,7 @@ final class Mapper
     }
 
     /**
-     * @return array{__type: string, ...}
-     * @throws Exception\ExtractionFailure
+     * @throws ExtractionFailure
      * @throws JsonException
      */
     public function toString(object $object): string
@@ -53,19 +57,19 @@ final class Mapper
 
             $serialized = $mapper->castToArray($object);
             if (! array_key_exists('__type', $serialized)) {
-                throw Exception\ExtractionFailure::forMissingTypeInSerialization($object, $serialized);
+                throw ExtractionFailure::forMissingTypeInSerialization($object, $serialized);
             }
 
             return jsonEncode($serialized);
         }
 
-        throw Exception\ExtractionFailure::forObject($object);
+        throw ExtractionFailure::forObject($object);
     }
 
     /**
-     * @psalm-param array{__type: string, ...} $serialized
-     * @throws Exception\InvalidSerializationFailure
-     * @throws Exception\UnknownMapperFailure
+     * @throws InvalidSerializationFailure
+     * @throws TaskMissingType
+     * @throws UnknownMapperFailure
      * @throws JsonException
      */
     public function toObject(string $json): object
@@ -73,7 +77,11 @@ final class Mapper
         $serialized = jsonDecode($json);
 
         if (! array_key_exists('__type', $serialized)) {
-            throw Exception\InvalidSerializationFailure::forMissingType($serialized);
+            throw InvalidSerializationFailure::forMissingType($serialized);
+        }
+
+        if (! is_string($serialized['__type'])) {
+            throw TaskMissingType::forJson($json);
         }
 
         foreach ($this->mappers as $mapper) {
@@ -84,7 +92,7 @@ final class Mapper
             return $mapper->castToObject($serialized);
         }
 
-        throw Exception\UnknownMapperFailure::forHydration($json);
+        throw UnknownMapperFailure::forHydration($json);
     }
 
     public function canCastToObject(string $json): bool

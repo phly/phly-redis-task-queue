@@ -10,9 +10,8 @@ use Psr\Log\LoggerInterface;
 
 use function array_filter;
 use function array_map;
-use function assert;
+use function array_values;
 use function count;
-use function is_string;
 
 final class RedisTaskQueue
 {
@@ -72,8 +71,6 @@ final class RedisTaskQueue
             return null;
         }
 
-        assert(is_string($task));
-
         return $this->mapper->toObject($task);
     }
 
@@ -90,7 +87,7 @@ final class RedisTaskQueue
             throw $e;
         }
 
-        return $this->filterAndCastTaskList($tasks);
+        return $this->filterAndCastTaskList(array_values($tasks));
     }
 
     public function retrieveInProgressTasks(): array
