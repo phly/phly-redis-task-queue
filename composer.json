@@ -1,12 +1,15 @@
 {
-    "name": "phly/redis-task-queue",
+    "name": "phly/phly-redis-task-queue",
     "license": "BSD-2-Clause",
     "keywords": [
         "components",
         "console",
+        "cron",
         "laminas",
         "psr-14",
         "psr-11",
+        "psr-3",
+        "redis",
         "queue"
     ],
     "require": {

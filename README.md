@@ -1,4 +1,4 @@
-# phly/redis-task-queue
+# phly/phly-redis-task-queue
 
 Implements both a task queue and crontab runner utilizing Redis, a [PSR-14 EventDispatcher](https://www.php-fig.org/psr/psr-14/), ReactPHP's event loop, and symfony/console (via [laminas-cli](https://docs.laminas.dev/laminas-cli/).
 
