@@ -20,10 +20,10 @@ class EmptyObjectMapperTest extends TestCase
     }
 
     /** @depends testMapperHandlesObjectOfKnownType */
-    public function testMapperCanExtractObject(EmptyObject $object): void
+    public function testMapperCanCastToArray(EmptyObject $object): void
     {
         $mapper     = new EmptyObjectMapper(EmptyObject::class);
-        $serialized = $mapper->extract($object);
+        $serialized = $mapper->castToArray($object);
         $this->assertEquals(['__type' => EmptyObject::class], $serialized);
     }
 
@@ -37,10 +37,10 @@ class EmptyObjectMapperTest extends TestCase
     }
 
     /** @depends testMapperHandlesArrayForKnownType */
-    public function testMapperCanHydrateObject(array $serialized): void
+    public function testMapperCanCastToObject(array $serialized): void
     {
         $mapper = new EmptyObjectMapper(EmptyObject::class);
-        $object = $mapper->hydrate($serialized);
+        $object = $mapper->castToObject($serialized);
         $this->assertInstanceOf(EmptyObject::class, $object);
     }
 }

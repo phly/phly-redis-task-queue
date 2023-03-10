@@ -7,7 +7,7 @@ namespace Phly\RedisTaskQueue\Mapper;
 interface MapperInterface
 {
     /**
-     * Can this implementation hydrate the given array type?
+     * Can this implementation cast the given array to an object?
      *
      * @psalm-param array{__type: string, ...} $serialized
      */
@@ -19,8 +19,8 @@ interface MapperInterface
     public function handlesObject(object $object): bool;
 
     /** @return array{__type: string, ...} */
-    public function extract(object $object): array;
+    public function castToArray(object $object): array;
 
     /** @psalm-param array{__type: string, ...} $serialized */
-    public function hydrate(array $serialized): object;
+    public function castToObject(array $serialized): object;
 }

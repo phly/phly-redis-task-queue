@@ -12,7 +12,7 @@ class UnknownMapperFailure extends RuntimeException implements ExceptionInterfac
 
     public static function forHydration(string $serialized): self
     {
-        $instance             = new self('Unable to hydrate object; no matching mapper');
+        $instance             = new self('Unable to cast JSON to object; no matching mapper');
         $instance->serialized = $serialized;
 
         return $instance;

@@ -36,7 +36,7 @@ final class Dispatcher
             $output->writeln(sprintf('<info>- Due! dispatching %s</info>', $job->task));
 
             if (! $this->mapper->canCastToObject($job->task)) {
-                $output->writeln('<error>- Unable to hydrate task; malformed, or missing mapper</error>');
+                $output->writeln('<error>- Unable to cast task to object; malformed, or missing mapper</error>');
                 continue;
             }
 

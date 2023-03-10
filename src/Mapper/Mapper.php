@@ -51,7 +51,7 @@ final class Mapper
                 continue;
             }
 
-            $serialized = $mapper->extract($object);
+            $serialized = $mapper->castToArray($object);
             if (! array_key_exists('__type', $serialized)) {
                 throw Exception\ExtractionFailure::forMissingTypeInSerialization($object, $serialized);
             }
@@ -81,7 +81,7 @@ final class Mapper
                 continue;
             }
 
-            return $mapper->hydrate($serialized);
+            return $mapper->castToObject($serialized);
         }
 
         throw Exception\UnknownMapperFailure::forHydration($json);

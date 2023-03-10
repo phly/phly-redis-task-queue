@@ -14,7 +14,7 @@ class InvalidSerializationFailure extends RuntimeException implements ExceptionI
 
     public static function forMissingType(array $serialized): self
     {
-        $instance                = new self('Unable to hydrate object; serialization missing "__type" param');
+        $instance                = new self('Unable to cast to object; serialization missing "__type" param');
         $instance->serialization = jsonEncode($serialized);
 
         return $instance;

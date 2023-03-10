@@ -22,12 +22,12 @@ final class EmptyObjectMapper implements MapperInterface
         return $object instanceof $this->class;
     }
 
-    public function extract(object $object): array
+    public function castToArray(object $object): array
     {
         return ['__type' => $this->class];
     }
 
-    public function hydrate(array $serialized): object
+    public function castToObject(array $serialized): object
     {
         return new ($this->class)();
     }

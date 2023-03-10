@@ -22,7 +22,7 @@ class TaskMapper implements MapperInterface
     }
 
     /** @param Task $object */
-    public function extract(object $object): array
+    public function castToArray(object $object): array
     {
         return [
             '__type'  => Task::class,
@@ -30,7 +30,7 @@ class TaskMapper implements MapperInterface
         ];
     }
 
-    public function hydrate(array $serialized): Task
+    public function castToObject(array $serialized): Task
     {
         $message = $serialized['message'] ?? '';
         assert(is_string($message));
