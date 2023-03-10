@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6fe2edd1e26467fba5766418177ac37e",
+    "content-hash": "75c13d566c17fa0b180e78714bbc7712",
     "packages": [
         {
             "name": "dragonmantank/cron-expression",
