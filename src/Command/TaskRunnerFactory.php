@@ -9,7 +9,9 @@ use Psr\Container\ContainerInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use React\EventLoop\LoopInterface;
 
+use function array_filter;
 use function assert;
+use function in_array;
 use function is_array;
 use function is_numeric;
 
@@ -35,11 +37,19 @@ final class TaskRunnerFactory
         $interval = $config['task_runner_interval'] ?? 1.0;
         assert(is_numeric($interval));
 
+        $signalsToRegister = $config['signals'] ?? TaskRunner::DEFAULT_SIGNAL_LIST;
+        assert(is_array($signalsToRegister));
+        $signalsToRegister = array_filter(
+            $signalsToRegister,
+            fn (int $signal) => in_array($signal, TaskRunner::DEFAULT_SIGNAL_LIST, true)
+        );
+
         return new TaskRunner(
             $queue,
             $dispatcher,
             $loop,
             (float) $interval,
+            $signalsToRegister,
         );
     }
 }

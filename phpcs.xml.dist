@@ -25,4 +25,8 @@
         <exclude-pattern>src/Exception/*.php</exclude-pattern>
         <exclude-pattern>src/Mapper/Exception/*.php</exclude-pattern>
     </rule>
+
+    <rule ref="WebimpressCodingStandard.NamingConventions.Interface.Suffix">
+        <exclude-pattern>src/Command/AllowedSignals.php</exclude-pattern>
+    </rule>
 </ruleset>

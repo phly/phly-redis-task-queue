@@ -263,3 +263,39 @@ directory=/var/www
 numprocs=1
 redirect_stderr=true
 ```
+
+## Configuration
+
+The following configuration can be consumed via the `config` service:
+
+```php
+return [
+    'redis-task-queue' => [
+        'mappers' => [
+            // Class names of mapper services that can map event types for serialization
+        ],
+        // Float seconds interval between task runner invocations
+        'task_runner_interval' => 1.0,
+        'signals' => [
+            // Integer signals which indicate the task or cron runner should terminate.
+            // In some cases, you may not be able to listen to SIGKILL
+            // (e.g. running under a non-privileged user in supervisord)
+            SIGKILL,
+            SIGINT,
+            SIGTERM,
+        ],
+    ],
+    'cron' => [
+        'jobs' => [
+            /* Job definitions.
+             * These are each arrays, and can have a named index or not.
+             * Each has the following structure:
+             * [
+             *     'schedule' => '* * * * *', // valid cron schedule string
+             *     'task'     => '{"__type": "...", ...}' // JSON serialization of task to run
+             * ]
+             */
+        ],
+    ],
+];
+```
