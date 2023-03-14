@@ -10,13 +10,15 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-final class CronRunner extends Command
+final class CronRunner extends Command implements AllowedSignals
 {
     use LoopSignalsTrait;
 
     public function __construct(
         private Dispatcher $dispatcher,
         private LoopInterface $loop,
+        /** @psalm-var list<int> */
+        private readonly array $signalsToRegister = self::DEFAULT_SIGNAL_LIST,
     ) {
         parent::__construct();
     }
@@ -30,7 +32,7 @@ final class CronRunner extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->registerTerminationSignals($this->loop, $output);
+        $this->registerTerminationSignals($this->signalsToRegister, $this->loop, $output);
         $this->registerCronHandler($output);
 
         $output->writeln('<info>Starting cron runner</info>');

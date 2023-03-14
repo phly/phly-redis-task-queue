@@ -14,7 +14,7 @@ use Throwable;
 
 use function sprintf;
 
-final class TaskRunner extends Command
+final class TaskRunner extends Command implements AllowedSignals
 {
     use LoopSignalsTrait;
 
@@ -23,6 +23,8 @@ final class TaskRunner extends Command
         private EventDispatcherInterface $dispatcher,
         private LoopInterface $loop,
         private readonly float $interval = 1.0,
+        /** @psalm-var list<int> */
+        private readonly array $signalsToRegister = self::DEFAULT_SIGNAL_LIST,
     ) {
         parent::__construct();
     }
@@ -35,7 +37,7 @@ final class TaskRunner extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->registerTerminationSignals($this->loop, $output);
+        $this->registerTerminationSignals($this->signalsToRegister, $this->loop, $output);
         $this->registerTaskHandler($this->loop, $output);
         $output->writeln('<info>Starting task runnner</info>');
         $this->loop->run();
