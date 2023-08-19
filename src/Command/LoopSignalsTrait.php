@@ -11,7 +11,6 @@ use function in_array;
 use function sprintf;
 
 use const SIGINT;
-use const SIGKILL;
 use const SIGTERM;
 
 trait LoopSignalsTrait
@@ -20,7 +19,6 @@ trait LoopSignalsTrait
     // phpcs:ignore WebimpressCodingStandard.NamingConventions.ValidVariableName.NotCamelCapsProperty
     private array $signals = [
         SIGTERM => "Caught TERM signal",
-        SIGKILL => "Caught KILL signal",
         SIGINT  => "Caught INT signal",
     ];
 
